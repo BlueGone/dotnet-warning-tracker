@@ -1,3 +1,4 @@
-﻿// See https://aka.ms/new-console-template for more information
+﻿using DotnetWarningTracker;
 
-Console.WriteLine("Hello, World!");
+var warningCount = await WarningCounter.CountWarningsForCurrentDirectoryAsync();
+Console.WriteLine(warningCount);
