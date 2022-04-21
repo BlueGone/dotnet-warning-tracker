@@ -1,5 +1,3 @@
-using System.Diagnostics;
-using System.Text;
 using System.Text.RegularExpressions;
 using CliWrap;
 using CliWrap.Buffered;
