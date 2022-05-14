@@ -1,5 +1,6 @@
 ﻿using System.CommandLine;
 using DotnetWarningTracker.Command;
+using DotnetWarningTracker.Reports;
 
 namespace DotnetWarningTracker;
 
@@ -14,32 +15,31 @@ static class Program
 
     static async Task HandleCommandAsync(CommandOptions options)
     {
-        if (options.GitBranchWalkingAsked)
+        var report = options switch
         {
-            await HandleGitBranchWalkingCommandAsync(options.GitBranch, options.NbCommits);
-        }
-        else
-        {
-            await HandleDefaultArgumentsCommandAsync();
-        }
+            { GitBranchWalkingAsked: true } => await HandleGitBranchWalkingCommandAsync(options.GitBranch, options.NbCommits),
+            _ => await HandleDefaultArgumentsCommandAsync()
+        };
+
+        Console.WriteLine(report.ToReportString());
     }
 
-    private static async Task HandleDefaultArgumentsCommandAsync()
+    private static async Task<IReport> HandleDefaultArgumentsCommandAsync()
     {
-        var nbWarnings = await WarningCounter.CountWarningsForCurrentDirectoryAsync();
-
-        Console.WriteLine($"{nbWarnings} warning(s)");
+        return await WarningCounter.CountWarningsForCurrentDirectoryAsync();
     }
 
-    private static async Task HandleGitBranchWalkingCommandAsync(string gitBranch, int nbCommits)
+    private static async Task<IReport> HandleGitBranchWalkingCommandAsync(string gitBranch, int nbCommits)
     {
         var walker = await GitBranchWalker.FromLastCommitsOfBranchAsync(gitBranch, nbCommits);
 
-        await walker.ForeachAsync(async commit =>
+        var gitCommitReports = walker.MapAsync(async commit =>
         {
-            var nbWarnings = await WarningCounter.CountWarningsForCurrentDirectoryAsync();
+            var dotnetBuildReport = await WarningCounter.CountWarningsForCurrentDirectoryAsync();
 
-            Console.WriteLine($"{commit}: {nbWarnings} warning(s)");
+            return new GitCommitReport(dotnetBuildReport, commit);
         });
+
+        return new GitWalkingReport(await gitCommitReports.ToListAsync(), gitBranch);
     }
 }

@@ -25,13 +25,13 @@ public class GitBranchWalker
         return new GitBranchWalker(commits);
     }
 
-    public async Task ForeachAsync(Func<string, Task> action)
+    public async IAsyncEnumerable<TOutput> MapAsync<TOutput>(Func<string, Task<TOutput>> action)
     {
         foreach (var commit in _commits)
         {
             await using var _ = await GitCheckoutContext.AcquireAsync(commit);
 
-            await action(commit);
+            yield return await action(commit);
         }
     }
 }

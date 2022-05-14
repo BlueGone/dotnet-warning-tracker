@@ -1,12 +1,13 @@
 using System.Text.RegularExpressions;
 using CliWrap;
 using CliWrap.Buffered;
+using DotnetWarningTracker.Reports;
 
 namespace DotnetWarningTracker;
 
 public static class WarningCounter
 {
-    public static async Task<int> CountWarningsForCurrentDirectoryAsync()
+    public static async Task<DotnetBuildReport> CountWarningsForCurrentDirectoryAsync()
     {
         var result = await Cli.Wrap("dotnet")
             .WithArguments("build --no-incremental")
@@ -16,10 +17,12 @@ public static class WarningCounter
             })
             .ExecuteBufferedAsync();
 
-        return GetWarningCountFromOutput(result.StandardOutput);
+        var warningsCount = GetWarningCountFromOutput(result.StandardOutput);
+
+        return new DotnetBuildReport(warningsCount);
     }
 
-    private static int GetWarningCountFromOutput(string processOutput)
+    private static uint GetWarningCountFromOutput(string processOutput)
     {
         var warningsCountRegex = new Regex("(?<warning_count>\\d+) Warning\\(s\\)", RegexOptions.Compiled);
 
@@ -29,6 +32,6 @@ public static class WarningCounter
             throw new InvalidProgramException("Could not find warnings count in process output");
         }
 
-        return int.Parse(regexMatch.Groups["warning_count"].Value);
+        return uint.Parse(regexMatch.Groups["warning_count"].Value);
     }
 }
