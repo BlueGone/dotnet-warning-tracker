@@ -2,5 +2,5 @@
 
 public record DotnetBuildReport(uint WarningsCount) : IReport
 {
-    public string ToReportString() => $"{WarningsCount} warning(s)";
+    public IEnumerable<object> GetCsvRecords() => new[] { this };
 }

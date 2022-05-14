@@ -2,5 +2,5 @@
 
 public interface IReport
 {
-    string ToReportString();
+    IEnumerable<object> GetCsvRecords();
 }

@@ -1,4 +1,5 @@
 ﻿using System.CommandLine;
+using System.Globalization;
 using DotnetWarningTracker.Command;
 using DotnetWarningTracker.Reports;
 
@@ -21,7 +22,19 @@ static class Program
             _ => await HandleDefaultArgumentsCommandAsync()
         };
 
-        Console.WriteLine(report.ToReportString());
+        var csvOutput = MakeCsvOutputFromReport(report);
+
+        Console.WriteLine(csvOutput);
+    }
+
+    private static string MakeCsvOutputFromReport(IReport report)
+    {
+        using var writer = new StringWriter();
+        using var csvWriter = new CsvHelper.CsvWriter(writer, CultureInfo.InvariantCulture);
+
+        csvWriter.WriteRecords(report.GetCsvRecords());
+
+        return writer.ToString();
     }
 
     private static async Task<IReport> HandleDefaultArgumentsCommandAsync()
