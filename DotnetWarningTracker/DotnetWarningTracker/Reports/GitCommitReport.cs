@@ -5,5 +5,12 @@ public record GitCommitReport(
     string CommitSha
 ) : IReport
 {
-    public IEnumerable<object> GetCsvRecords() => new[] { this };
+    public IEnumerable<object> GetCsvRecords() => new[]
+    {
+        new
+        {
+            CommitSha,
+            DotnetBuildReport.WarningsCount
+        }
+    };
 }

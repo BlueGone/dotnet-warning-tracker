@@ -1,6 +1,9 @@
 ﻿namespace DotnetWarningTracker.Reports;
 
-public record DotnetBuildReport(uint WarningsCount) : IReport
+public record DotnetBuildReport(uint WarningsCount, QualifiedDotnetWarning[] QualifiedDotnetWarnings) : IReport
 {
-    public IEnumerable<object> GetCsvRecords() => new[] { this };
+    public IEnumerable<object> GetCsvRecords() => new[]
+    {
+        new { WarningsCount }
+    };
 }

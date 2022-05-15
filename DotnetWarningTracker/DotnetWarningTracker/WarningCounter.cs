@@ -19,7 +19,9 @@ public static class WarningCounter
 
         var warningsCount = GetWarningCountFromOutput(result.StandardOutput);
 
-        return new DotnetBuildReport(warningsCount);
+        var qualifiedDotnetWarnings = GetQualifiedDotnetWarningsFromOutput(result.StandardOutput);
+
+        return new DotnetBuildReport(warningsCount, qualifiedDotnetWarnings);
     }
 
     private static uint GetWarningCountFromOutput(string processOutput)
@@ -33,5 +35,38 @@ public static class WarningCounter
         }
 
         return uint.Parse(regexMatch.Groups["warning_count"].Value);
+    }
+
+    private static QualifiedDotnetWarning[] GetQualifiedDotnetWarningsFromOutput(string processOutput)
+    {
+        return processOutput
+            .Split(Environment.NewLine)
+            .Select(GetQualifiedDotnetWarningFromLine)
+            .OfType<QualifiedDotnetWarning>()
+            .Distinct()
+            .ToArray();
+    }
+
+    private static QualifiedDotnetWarning? GetQualifiedDotnetWarningFromLine(string line)
+    {
+        var regex = new Regex(
+            "^(?<source_file_path>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): warning (?<rule_id>\\w*): (?<message>.*) \\[(?<csproj_path>.*)\\]",
+            RegexOptions.Compiled);
+
+        var match = regex.Match(line);
+
+        if (!match.Success)
+        {
+            return null;
+        }
+
+        return new QualifiedDotnetWarning(
+            match.Groups["source_file_path"].Value,
+            uint.Parse(match.Groups["line"].Value),
+            uint.Parse(match.Groups["column"].Value),
+            match.Groups["rule_id"].Value,
+            match.Groups["message"].Value,
+            match.Groups["csproj_path"].Value
+        );
     }
 }

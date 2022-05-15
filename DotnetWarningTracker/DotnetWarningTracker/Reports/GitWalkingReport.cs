@@ -5,5 +5,10 @@ public record GitWalkingReport(
     string BranchName
 ) : IReport
 {
-    public IEnumerable<object> GetCsvRecords() => GitCommitReports;
+    public IEnumerable<object> GetCsvRecords() => GitCommitReports
+        .Select(gitCommitReport => new
+        {
+            gitCommitReport.CommitSha,
+            gitCommitReport.DotnetBuildReport.WarningsCount
+        });
 }
