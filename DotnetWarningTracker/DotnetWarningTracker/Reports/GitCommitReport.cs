@@ -2,7 +2,10 @@
 
 public record GitCommitReport(
     DotnetBuildReport DotnetBuildReport,
-    string CommitSha
+
+    string CommitSha,
+    string CommitMessage,
+    DateTime CommitDateTime
 ) : IReport
 {
     public IEnumerable<object> GetCsvRecords() => new[]
@@ -10,6 +13,9 @@ public record GitCommitReport(
         new
         {
             CommitSha,
+            CommitMessage,
+            Date = DateOnly.FromDateTime(CommitDateTime),
+            Time = TimeOnly.FromDateTime(CommitDateTime),
             DotnetBuildReport.WarningsCount
         }
     };

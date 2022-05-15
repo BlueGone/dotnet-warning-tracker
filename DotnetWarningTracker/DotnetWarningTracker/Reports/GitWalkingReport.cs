@@ -8,7 +8,10 @@ public record GitWalkingReport(
     public IEnumerable<object> GetCsvRecords() => GitCommitReports
         .Select(gitCommitReport => new
         {
+            gitCommitReport.CommitMessage,
             gitCommitReport.CommitSha,
-            gitCommitReport.DotnetBuildReport.WarningsCount
+            CommitDate = DateOnly.FromDateTime(gitCommitReport.CommitDateTime),
+            CommitTime = TimeOnly.FromDateTime(gitCommitReport.CommitDateTime),
+            gitCommitReport.DotnetBuildReport.WarningsCount,
         });
 }

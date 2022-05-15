@@ -1,33 +1,24 @@
-using CliWrap;
-using CliWrap.Buffered;
-
 namespace DotnetWarningTracker;
 
 public class GitBranchWalker
 {
-    const int DefaultCommitsLimit = 10;
+    private readonly IReadOnlyCollection<string> _commitSHAs;
 
-    private readonly IReadOnlyCollection<string> _commits;
-
-    private GitBranchWalker(IReadOnlyCollection<string> commits)
+    private GitBranchWalker(IReadOnlyCollection<string> commitShAs)
     {
-        _commits = commits;
+        _commitSHAs = commitShAs;
     }
 
-    public static async Task<GitBranchWalker> FromLastCommitsOfBranchAsync(string branch, int commitsLimit = DefaultCommitsLimit)
+    public static async Task<GitBranchWalker> FromLastCommitsOfBranchAsync(string branch, int commitsLimit)
     {
-        var gitLogResult = await Cli.Wrap("git")
-            .WithArguments($"log --merges --first-parent {branch} --format=format:\"%h\"")
-            .ExecuteBufferedAsync();
+        var commitSHAs = await GitCommandsRunner.GetCommitSHAsAsync(branch);
 
-        var commits = gitLogResult.StandardOutput.Split().Take(commitsLimit).Reverse().ToList();
-
-        return new GitBranchWalker(commits);
+        return new GitBranchWalker(commitSHAs.Take(commitsLimit).Reverse().ToList());
     }
 
     public async IAsyncEnumerable<TOutput> MapAsync<TOutput>(Func<string, Task<TOutput>> action)
     {
-        foreach (var commit in _commits)
+        foreach (var commit in _commitSHAs)
         {
             await using var _ = await GitCheckoutContext.AcquireAsync(commit);
 

@@ -1,6 +1,3 @@
-using CliWrap;
-using CliWrap.Buffered;
-
 namespace DotnetWarningTracker;
 
 class GitCheckoutContext : IAsyncDisposable
@@ -14,23 +11,14 @@ class GitCheckoutContext : IAsyncDisposable
 
     public static async Task<GitCheckoutContext> AcquireAsync(string gitReference)
     {
-        var gitShowResult = await Cli.Wrap("git")
-            .WithArguments("show --format=format:%h")
-            .ExecuteBufferedAsync();
-
-        var currentCommit = gitShowResult.StandardOutput.TrimEnd();
-
-        await Cli.Wrap("git")
-            .WithArguments($"switch -d {gitReference}")
-            .ExecuteBufferedAsync();
+        var currentCommit = await GitCommandsRunner.GetCurrentCommitShaAsync();
+        await GitCommandsRunner.SwitchWithDetachedHeadAsync(gitReference);
 
         return new GitCheckoutContext(currentCommit);
     }
 
     public async ValueTask DisposeAsync()
     {
-        await Cli.Wrap("git")
-            .WithArguments($"switch -d {_currentCommit}")
-            .ExecuteBufferedAsync();
+        await GitCommandsRunner.SwitchWithDetachedHeadAsync(_currentCommit);
     }
 }

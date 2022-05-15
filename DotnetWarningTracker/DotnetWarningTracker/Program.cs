@@ -46,11 +46,14 @@ static class Program
     {
         var walker = await GitBranchWalker.FromLastCommitsOfBranchAsync(gitBranch, nbCommits);
 
-        var gitCommitReports = walker.MapAsync(async commit =>
+        var gitCommitReports = walker.MapAsync(async commitSha =>
         {
             var dotnetBuildReport = await WarningCounter.CountWarningsForCurrentDirectoryAsync();
 
-            return new GitCommitReport(dotnetBuildReport, commit);
+            var commitMessage = await GitCommandsRunner.GetCommitMessageAsync(commitSha);
+            var commitDateTime = await GitCommandsRunner.GetCommitDateTimeAsync(commitSha);
+
+            return new GitCommitReport(dotnetBuildReport, commitSha, commitMessage, commitDateTime);
         });
 
         return new GitWalkingReport(await gitCommitReports.ToListAsync(), gitBranch);
