@@ -16,6 +16,7 @@ public static class CommandBuilder
 
         command.AddOption(new Option<string>("--git-branch"));
         command.AddOption(new Option<int>("--nb-commits", getDefaultValue: () => 10));
+        command.AddOption(new Option<string>("--until-commit"));
 
         return command;
     }

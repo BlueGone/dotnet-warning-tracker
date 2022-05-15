@@ -4,7 +4,8 @@ namespace DotnetWarningTracker.Command;
 
 public record CommandOptions(
     string? GitBranch,
-    int NbCommits
+    int NbCommits,
+    string? UntilCommit
 )
 {
     [MemberNotNullWhen(true, nameof(GitBranch))]

@@ -18,7 +18,10 @@ static class Program
     {
         var report = options switch
         {
-            { GitBranchWalkingAsked: true } => await HandleGitBranchWalkingCommandAsync(options.GitBranch, options.NbCommits),
+            { GitBranchWalkingAsked: true } =>
+                options.UntilCommit is null
+                    ? await HandleGitBranchWalkingCommandAsync(options.GitBranch, options.NbCommits)
+                    : await HandleGitBranchWalkingCommandAsync(options.GitBranch, options.UntilCommit),
             _ => await HandleDefaultArgumentsCommandAsync()
         };
 
@@ -46,6 +49,18 @@ static class Program
     {
         var walker = await GitBranchWalker.FromLastCommitsOfBranchAsync(gitBranch, nbCommits);
 
+        return await HandleGitBranchWalkingCommandAsync(gitBranch, walker);
+    }
+
+    private static async Task<IReport> HandleGitBranchWalkingCommandAsync(string gitBranch, string untilCommit)
+    {
+        var walker = await GitBranchWalker.UntilCommitOfBranchAsync(gitBranch, untilCommit);
+
+        return await HandleGitBranchWalkingCommandAsync(gitBranch, walker);
+    }
+
+    private static async Task<IReport> HandleGitBranchWalkingCommandAsync(string gitBranch, GitBranchWalker walker)
+    {
         var gitCommitReports = walker.MapAsync(async commitSha =>
         {
             var dotnetBuildReport = await WarningCounter.CountWarningsForCurrentDirectoryAsync();
